@@ -1,0 +1,98 @@
+CREATE DATABASE nitkuora;
+
+ALTER TABLE question ADD CONSTRAINT qfkey FOREIGN KEY (q_user_id) REFERENCES user(user_id);
+ALTER TABLE answer ADD CONSTRAINT afkey1 FOREIGN KEY ( a_user_id ) REFERENCES user( user_id ) ;
+ALTER TABLE answer ADD CONSTRAINT afkey2 FOREIGN KEY ( a_question_id ) REFERENCES question( question_id ) ;
+ALTER TABLE comment ADD CONSTRAINT cfkey1 FOREIGN KEY ( c_user_id ) REFERENCES user( user_id );
+ALTER TABLE comment ADD CONSTRAINT cfkey2 FOREIGN KEY ( c_answer_id ) REFERENCES answer( answer_id );
+ALTER TABLE downvote ADD CONSTRAINT dfkey1 FOREIGN KEY ( d_user_id ) REFERENCES user( user_id );
+ALTER TABLE downvote ADD CONSTRAINT dfkey2 FOREIGN KEY ( d_answer_id ) REFERENCES answer( answer_id );
+ALTER TABLE upvote ADD CONSTRAINT ufkey1 FOREIGN KEY ( u_user_id ) REFERENCES user( user_id ) ;
+ALTER TABLE upvote ADD CONSTRAINT ufkey2 FOREIGN KEY ( u_answer_id ) REFERENCES answer( answer_id ) ;
+
+ALTER TABLE `follower_following` ADD CONSTRAINT `fffkey1` FOREIGN KEY ( `user1_id` ) REFERENCES `nitkuora`.`user` (
+`user_id`
+) ON DELETE RESTRICT ON UPDATE RESTRICT ;
+
+ALTER TABLE `follower_following` ADD CONSTRAINT `fffkey2` FOREIGN KEY ( `user2_id` ) REFERENCES `nitkuora`.`user` (
+`user_id`
+) ON DELETE RESTRICT ON UPDATE RESTRICT ;
+
+ALTER TABLE `follower_topic` ADD CONSTRAINT `ftfkey1` FOREIGN KEY ( `user_id` ) REFERENCES `nitkuora`.`user` (
+`user_id`
+) ON DELETE RESTRICT ON UPDATE RESTRICT ;
+
+ALTER TABLE `follower_topic` ADD CONSTRAINT `ftfkey2` FOREIGN KEY ( `topic_id` ) REFERENCES `nitkuora`.`topic` (
+`topic_id`
+) ON DELETE RESTRICT ON UPDATE RESTRICT ; 
+
+ALTER TABLE `topic_question` ADD CONSTRAINT `tqfkey1` FOREIGN KEY ( `topic_id` ) REFERENCES `nitkuora`.`topic` (
+`topic_id`
+) ON DELETE RESTRICT ON UPDATE RESTRICT ;
+
+ALTER TABLE `topic_question` ADD CONSTRAINT `tqfkey2` FOREIGN KEY ( `question_id` ) REFERENCES `nitkuora`.`question` (
+`question_id`
+) ON DELETE RESTRICT ON UPDATE RESTRICT ;
+
+ALTER TABLE `question` CHANGE `timestamp` `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ;
+ALTER TABLE `answer` CHANGE `timestamp` `timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ;
+
+ALTER TABLE `topic` CHANGE `topic` `topic` VARCHAR( 30 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ;
+
+INSERT INTO `nitkuora`.`topic` (`topic_id`, `topic`, `no_followers`, `no_questions`) VALUES ('1', 'Science and Technology', '0', '0');
+INSERT INTO `nitkuora`.`topic` (`topic_id`, `topic`, `no_followers`, `no_questions`) VALUES ('2', 'Philosophy', '0', '0');
+INSERT INTO `topic` ( `topic_id` , `topic` , `no_followers` , `no_questions` ) VALUES ('3', 'Animals', '0', '0');
+
+ALTER TABLE `topic` CHANGE `topicname` `topic_name` VARCHAR( 30 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ;
+
+ALTER TABLE `question` CHANGE `question` `question_name` VARCHAR( 100 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ;
+
+ALTER TABLE `answer` CHANGE `answer` `answer_name` VARCHAR( 250 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ;
+
+ALTER TABLE `user` CHANGE `no_followers` `no_followers` INT( 5 ) NOT NULL DEFAULT '0';
+
+ALTER TABLE `answer` CHANGE `answer_id` `answer_id` INT( 10 ) NOT NULL AUTO_INCREMENT ;
+ALTER TABLE `comment` CHANGE `comment_id` `comment_id` INT( 10 ) NOT NULL AUTO_INCREMENT ;
+ALTER TABLE `downvote` CHANGE `downvote_id` `downvote_id` INT( 10 ) NOT NULL AUTO_INCREMENT ;
+ALTER TABLE `question` CHANGE `question_id` `question_id` INT( 10 ) NOT NULL AUTO_INCREMENT ;
+ALTER TABLE `topic` CHANGE `topic_id` `topic_id` INT( 10 ) NOT NULL AUTO_INCREMENT ;
+ALTER TABLE `upvote` CHANGE `upvote_id` `upvote_id` INT( 10 ) NOT NULL AUTO_INCREMENT ;
+
+ALTER TABLE `question` CHANGE `no_answers` `no_answers` INT( 5 ) NOT NULL DEFAULT '0';
+
+ALTER TABLE `question` ADD UNIQUE (
+`question_name`
+);
+
+
+
+DELIMITER $$
+CREATE TRIGGER t_no_questions 
+    AFTER INSERT ON topic_question
+    FOR EACH ROW BEGIN
+ 
+    UPDATE topic
+    SET no_questions = no_questions + 1 WHERE topic_id = NEW.topic_id ; 
+END$$
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE TRIGGER t_no_followers 
+    AFTER INSERT ON follower_topic
+    FOR EACH ROW BEGIN
+ 
+    UPDATE topic
+    SET no_followers = no_followers + 1 WHERE topic_id = NEW.topic_id ; 
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER t_no_answers 
+    AFTER INSERT ON answer
+    FOR EACH ROW BEGIN
+ 
+    UPDATE question
+    SET no_answers = no_answers + 1 WHERE question_id = NEW.a_question_id ; 
+END$$
+DELIMITER ;
